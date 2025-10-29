@@ -221,6 +221,63 @@
       "axen_compressor_freq": {
         "name": "Heat pump compressor frequency"
       },
+      "axenregister64": {
+        "name": "Heat Pump Flow Rate"
+      },
+      "axenregister65": {
+        "name": "Heat Pump Register 65"
+      },
+      "water_pump_running": {
+        "name": "Water Circulation Pump Status"
+      },
+      "target_flow_temp": {
+        "name": "Target Flow Temperature"
+      },
+      "chdhw_valve_state": {
+        "name": "CH/DHW Valve State"
+      },
+      "actual_flow_temp": {
+        "name": "Actual Flow Temperature"
+      },
+      "actual_return_temp": {
+        "name": "Actual Return Temperature"
+      },
+      "compressor_freq_info": {
+        "name": "Compressor Frequency"
+      },
+      "fan_speed": {
+        "name": "Heat Pump Fan Speed"
+      },
+      "heat_pump_ambient": {
+        "name": "Heat Pump Ambient Temperature"
+      },
+      "heat_demanded": {
+        "name": "Heat Demand Status"
+      },
+      "actual_dhw_temp": {
+        "name": "Actual DHW Temperature"
+      },
+      "circuit1_desired_lwt": {
+        "name": "Circuit 1 Desired Leaving Water Temperature"
+      },
+      "ch_valve_state": {
+        "name": "Central Heating Valve State"
+      },
+      "info_param95": {
+        "name": "Information Parameter 95"
+      },
+      "electrical_power": {
+        "name": "Electrical Power Consumption"
+      },
+      "thermal_power": {
+        "name": "Thermal Power Output"
+      },
+      "cop": {
+        "name": "COP"
+      },
+      "scop": {
+        "name": "SCOP"
+      },
       "lambda_status": {
         "name": "Lambda status",
         "state": {
@@ -633,6 +690,12 @@
       },
       "hdw_legion_hour": {
         "name": "Legionella Protection Hour"
+      },
+      "hdw_load_time": {
+        "name": "Hot Water Loading Time"
+      },
+      "hdw_start_one_loading": {
+        "name": "Hot Water Start One Loading"
       },
       "summer_on": {
         "name": "Summer Mode Activation Temperature"

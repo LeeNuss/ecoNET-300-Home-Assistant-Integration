@@ -26,7 +26,6 @@ from .const import (
     API_SYS_PARAMS_URI,
     CONTROL_PARAMS,
     NUMBER_MAP,
-    NUMBER_MAP_KEY,
     RMNEWPARAM_PARAMS,
 )
 from .mem_cache import MemCache
@@ -324,7 +323,12 @@ class Econet300Api:
 
         # editParams uses minv/maxv keys
         curr_limits = limits[param]
-        _LOGGER.debug("Limits (min=%s, max=%s) for edit param '%s' retrieved successfully from editParams", curr_limits["minv"], curr_limits["maxv"], param)
+        _LOGGER.debug(
+            "Limits (min=%s, max=%s) for edit param '%s' retrieved successfully from editParams",
+            curr_limits["minv"],
+            curr_limits["maxv"],
+            param,
+        )
         return Limits(curr_limits["minv"], curr_limits["maxv"])
 
     async def get_param_limits(self, param: str):
@@ -377,7 +381,9 @@ class Econet300Api:
 
         # Extract and log the limits (uses min/max keys)
         curr_limits = limits[param]
-        _LOGGER.debug("Limits for edit param '%s' retrieved successfully from paramsEdits", param)
+        _LOGGER.debug(
+            "Limits for edit param '%s' retrieved successfully from paramsEdits", param
+        )
         return Limits(curr_limits["min"], curr_limits["max"])
 
     async def fetch_reg_params_data(self) -> dict[str, Any] | None:
@@ -440,19 +446,20 @@ class Econet300Api:
         return sysParams
 
     async def fetch_edit_params(self) -> dict[str, Any] | None:
-        """Fetch and return the editParams data from ip/econet/editParams endpoint.
+        """Fetch and return the full editParams response from ip/econet/editParams endpoint.
 
         This endpoint is only supported by ecoMAX360 devices.
         Other devices will return None.
+
+        Returns the full editParams object containing both 'data' and 'informationParams' sections.
         """
         _LOGGER.debug(
             "fetch_edit_params called: Fetching editParams from host '%s'",
             self.host,
         )
-        editParams = await self._fetch_api_data_by_key(
-            API_EDIT_PARAMS_URI, API_EDIT_PARAMS_DATA
-        )
-        _LOGGER.debug("Fetched editParams data")
+        # Fetch the entire editParams response (not just the "data" section)
+        editParams = await self._fetch_api_data_by_key(API_EDIT_PARAMS_URI, None)
+        _LOGGER.debug("Fetched full editParams response (data + informationParams)")
         return editParams
 
     async def _fetch_api_data_by_key(self, endpoint: str, data_key: str | None = None):

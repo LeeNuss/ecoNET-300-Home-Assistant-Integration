@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import Econet300Api, EconetDataCoordinator
-from .const import BOILER_CONTROL, DOMAIN, SERVICE_API, SERVICE_COORDINATOR
+from .const import BOILER_CONTROL  # , DOMAIN, SERVICE_API, SERVICE_COORDINATOR
 from .entity import EconetEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,10 +102,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
-    coordinator: EconetDataCoordinator = hass.data[DOMAIN][entry.entry_id][
-        SERVICE_COORDINATOR
-    ]
-    api: Econet300Api = hass.data[DOMAIN][entry.entry_id][SERVICE_API]
+    # coordinator: EconetDataCoordinator = hass.data[DOMAIN][entry.entry_id][
+    #     SERVICE_COORDINATOR
+    # ]
+    # api: Econet300Api = hass.data[DOMAIN][entry.entry_id][SERVICE_API]
 
     # Create boiler control switch
     # boiler_switch = create_boiler_switch(coordinator, api)

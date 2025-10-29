@@ -118,11 +118,27 @@ class EconetDataCoordinator(DataUpdateCoordinator):
                     params_edits = await self._api.fetch_param_edit_data()
 
                 # Determine whether to fetch editParams from ../econet/editParams
-                edit_params: dict[str, Any]
+                edit_params_full: dict[str, Any]
                 if sys_params is None or skip_edit_params(sys_params):
-                    edit_params = {}
+                    edit_params_full = {}
                 else:
-                    edit_params = await self._api.fetch_edit_params() or {}
+                    edit_params_full = await self._api.fetch_edit_params() or {}
+
+                # Extract editParams sections for easier access
+                # editParams contains both "data" and "informationParams" sections
+                edit_params_data = edit_params_full.get("data", {})
+                information_params = edit_params_full.get("informationParams", {})
+
+                _LOGGER.info(
+                    "Coordinator data: editParams has %d items, informationParams has %d items",
+                    len(edit_params_data),
+                    len(information_params)
+                )
+                if information_params:
+                    _LOGGER.debug(
+                        "informationParams sample keys: %s",
+                        list(information_params.keys())[:10]
+                    )
 
                 # Fetch regular parameters from ../econet/regParams
                 reg_params = await self._api.fetch_reg_params()
@@ -131,7 +147,8 @@ class EconetDataCoordinator(DataUpdateCoordinator):
                     "sysParams": sys_params,
                     "regParams": reg_params,
                     "paramsEdits": params_edits,
-                    "editParams": edit_params,
+                    "editParams": edit_params_data,  # Maintain backward compatibility
+                    "informationParams": information_params,  # New section
                 }
         except AuthError as err:
             _LOGGER.error("Authentication error: %s", err)

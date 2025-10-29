@@ -218,6 +218,63 @@
       "axen_compressor_freq": {
         "name": "Częstotliwość sprężarki pompy ciepła"
       },
+      "axenregister64": {
+        "name": "Przepływ pompy ciepła"
+      },
+      "axenregister65": {
+        "name": "Rejestr 65 pompy ciepła"
+      },
+      "water_pump_running": {
+        "name": "Status pompy obiegowej wody"
+      },
+      "target_flow_temp": {
+        "name": "Docelowa temperatura zasilania"
+      },
+      "chdhw_valve_state": {
+        "name": "Stan zaworu CO/CWU"
+      },
+      "actual_flow_temp": {
+        "name": "Rzeczywista temperatura zasilania"
+      },
+      "actual_return_temp": {
+        "name": "Rzeczywista temperatura powrotu"
+      },
+      "compressor_freq_info": {
+        "name": "Częstotliwość sprężarki"
+      },
+      "fan_speed": {
+        "name": "Prędkość wentylatora pompy ciepła"
+      },
+      "heat_pump_ambient": {
+        "name": "Temperatura otoczenia pompy ciepła"
+      },
+      "heat_demanded": {
+        "name": "Status zapotrzebowania na ciepło"
+      },
+      "actual_dhw_temp": {
+        "name": "Rzeczywista temperatura CWU"
+      },
+      "circuit1_desired_lwt": {
+        "name": "Obwód 1 pożądana temperatura wyjściowa wody"
+      },
+      "ch_valve_state": {
+        "name": "Stan zaworu centralnego ogrzewania"
+      },
+      "info_param95": {
+        "name": "Parametr informacyjny 95"
+      },
+      "electrical_power": {
+        "name": "Zużycie energii elektrycznej"
+      },
+      "thermal_power": {
+        "name": "Moc cieplna wyjściowa"
+      },
+      "cop": {
+        "name": "Współczynnik wydajności"
+      },
+      "scop": {
+        "name": "Sezonowy współczynnik wydajności"
+      },
       "lambda_status": {
         "name": "Lambda status",
         "state": {
@@ -641,6 +698,12 @@
       },
       "hdw_legion_hour": {
         "name": "Godzina ochrony antylegionellowej"
+      },
+      "hdw_load_time": {
+        "name": "Czas ładowania ciepłej wody"
+      },
+      "hdw_start_one_loading": {
+        "name": "Start jednorazowego ładowania CWU"
       },
       "summer_on": {
         "name": "Temperatura aktywacji trybu letniego"

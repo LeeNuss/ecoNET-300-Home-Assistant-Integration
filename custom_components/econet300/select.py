@@ -11,15 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import Econet300Api
 from .common import EconetDataCoordinator, skip_edit_params, skip_params_edits
-from .const import (
-    CIRCUIT1_WORK_STATE_VALUES,
-    DOMAIN,
-    HEATER_MODE_PARAM_INDEX,
-    HEATER_MODE_VALUES,
-    SELECT_MAP_KEY,
-    SERVICE_API,
-    SERVICE_COORDINATOR,
-)
+from .const import DOMAIN, SELECT_MAP_KEY, SERVICE_API, SERVICE_COORDINATOR
 from .entity import EconetEntity
 
 _LOGGER = logging.getLogger(__name__)

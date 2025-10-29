@@ -9,7 +9,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import Limits
-from .common import Econet300Api, EconetDataCoordinator, skip_edit_params, skip_params_edits
+from .common import (
+    Econet300Api,
+    EconetDataCoordinator,
+    skip_edit_params,
+    skip_params_edits,
+)
 from .common_functions import camel_to_snake
 from .const import (
     DOMAIN,
@@ -92,7 +97,10 @@ class EconetNumber(EconetEntity, NumberEntity):
         # For paramsEdits, limits might not be in the value, so fetch if needed
         if not self.has_edit_params and self.has_params_edits:
             # Only fetch limits if we don't already have them from the value
-            if self._attr_native_min_value is None or self._attr_native_max_value is None:
+            if (
+                self._attr_native_min_value is None
+                or self._attr_native_max_value is None
+            ):
                 self.hass.async_create_task(self.async_set_limits_values())
 
     def _set_value_limits(self, value):
@@ -121,13 +129,12 @@ class EconetNumber(EconetEntity, NumberEntity):
             # Use editParams endpoint (ecoMAX360i)
             _LOGGER.debug("Fetching limits from editParams for key: %s", key)
             return await self.api.get_param_limits_from_edit_params(key)
-        elif self.has_params_edits:
+        if self.has_params_edits:
             # Use rmCurrentDataParamsEdits endpoint (most controllers)
             _LOGGER.debug("Fetching limits from paramsEdits for key: %s", key)
             return await self.api.get_param_limits(key)
-        else:
-            _LOGGER.warning("No parameter editing support available for key: %s", key)
-            return None
+        _LOGGER.warning("No parameter editing support available for key: %s", key)
+        return None
 
     async def async_set_limits_values(self):
         """Async Sync number limits."""
@@ -197,14 +204,13 @@ def can_add(
                 coordinator.has_edit_params_data(key)
                 and coordinator.data["editParams"][key]
             )
-        elif has_params_edits:
+        if has_params_edits:
             # For most controllers: check paramsEdits data
             return (
                 coordinator.has_param_edit_data(key)
                 and coordinator.data["paramsEdits"][key]
             )
-        else:
-            return False
+        return False
     except KeyError as e:
         _LOGGER.error("KeyError in can_add: %s", e)
         return False
@@ -295,7 +301,11 @@ async def async_setup_entry(
             edit_params = coordinator.data.get("editParams", {})
             if key in edit_params:
                 param_data = edit_params[key]
-                if isinstance(param_data, dict) and "minv" in param_data and "maxv" in param_data:
+                if (
+                    isinstance(param_data, dict)
+                    and "minv" in param_data
+                    and "maxv" in param_data
+                ):
                     number_limits = Limits(param_data["minv"], param_data["maxv"])
                     _LOGGER.debug(
                         "Extracted limits for %s from editParams: min=%s, max=%s",

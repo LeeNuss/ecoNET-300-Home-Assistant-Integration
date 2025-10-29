@@ -19,11 +19,13 @@ from .common import EconetDataCoordinator
 from .common_functions import camel_to_snake
 from .const import (
     DOMAIN,
+    EDIT_PARAMS_DATA_SENSOR_MAP,
     ENTITY_CATEGORY,
     ENTITY_PRECISION,
     ENTITY_SENSOR_DEVICE_CLASS_MAP,
     ENTITY_UNIT_MAP,
     ENTITY_VALUE_PROCESSOR,
+    INFORMATION_PARAMS_SENSOR_MAP,
     SENSOR_MAP_KEY,
     SENSOR_MIXER_KEY,
     SERVICE_API,
@@ -159,6 +161,8 @@ def create_controller_sensors(
     # Get the system and regular parameters from the coordinator
     data_regParams = coordinator.data.get("regParams", {})
     data_sysParams = coordinator.data.get("sysParams", {})
+    data_editParams = coordinator.data.get("editParams", {})
+    data_informationParams = coordinator.data.get("informationParams", {})
 
     # Extract the controllerID from sysParams
     controller_id = data_sysParams.get("controllerID", None)
@@ -181,7 +185,7 @@ def create_controller_sensors(
     # Iterate through the selected keys and create sensors if valid data is found
     for data_key in sensor_keys:
         _LOGGER.debug(
-            "Processing entity sensor data_key: %s from regParams & sysParams", data_key
+            "Processing entity sensor data_key: %s from regParams, sysParams, editParams & informationParams", data_key
         )
         if data_key in data_regParams:
             # Check if the value is not null before creating the sensor
@@ -211,9 +215,66 @@ def create_controller_sensors(
             _LOGGER.debug(
                 "Created and appended sensor entity from sysParams: %s", entity
             )
+        elif data_key in EDIT_PARAMS_DATA_SENSOR_MAP:
+            # Check if this is an editParams data sensor (needs parameter ID mapping)
+            param_id = EDIT_PARAMS_DATA_SENSOR_MAP[data_key]
+            if param_id in data_editParams:
+                edit_param_value = data_editParams[param_id]
+                if edit_param_value is None:
+                    _LOGGER.info(
+                        "%s (param_id: %s) in editParams is null, sensor will not be created.",
+                        data_key, param_id
+                    )
+                    continue
+                # For editParams, the value might be a dict with 'value' key or a simple value
+                if isinstance(edit_param_value, dict) and edit_param_value.get("value") is None:
+                    _LOGGER.info(
+                        "%s (param_id: %s) in editParams has null value, sensor will not be created.",
+                        data_key, param_id
+                    )
+                    continue
+                entity = EconetSensor(
+                    create_sensor_entity_description(data_key), coordinator, api
+                )
+                entities.append(entity)
+                _LOGGER.debug(
+                    "Created and appended sensor entity from editParams: %s (param_id: %s)", entity, param_id
+                )
+            else:
+                _LOGGER.debug(
+                    "Key: %s maps to editParams ID %s but not found in data, sensor entity will not be added.",
+                    data_key,
+                    param_id,
+                )
+        elif data_key in INFORMATION_PARAMS_SENSOR_MAP:
+            # Check if this is an informationParams sensor
+            param_id = INFORMATION_PARAMS_SENSOR_MAP[data_key]
+            if param_id in data_informationParams:
+                # informationParams has structure: [editable_flag, [[value, unit, type]]]
+                info_data = data_informationParams[param_id]
+                # Check if it has valid data structure
+                if isinstance(info_data, list) and len(info_data) > 1 and isinstance(info_data[1], list) and len(info_data[1]) > 0:
+                    entity = EconetSensor(
+                        create_sensor_entity_description(data_key), coordinator, api
+                    )
+                    entities.append(entity)
+                    _LOGGER.debug(
+                        "Created and appended sensor entity from informationParams: %s (param_id: %s)", entity, param_id
+                    )
+                else:
+                    _LOGGER.info(
+                        "%s in informationParams has invalid structure, sensor will not be created.",
+                        data_key,
+                    )
+            else:
+                _LOGGER.debug(
+                    "Key: %s maps to informationParams ID %s but not found in data, sensor entity will not be added.",
+                    data_key,
+                    param_id,
+                )
         else:
             _LOGGER.debug(
-                "Key: %s is not mapped in regParams or sysParams, sensor entity will not be added.",
+                "Key: %s is not mapped in regParams, sysParams, editParams, or informationParams, sensor entity will not be added.",
                 data_key,
             )
     _LOGGER.info("Total sensor entities created: %d", len(entities))

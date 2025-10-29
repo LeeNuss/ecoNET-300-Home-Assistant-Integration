@@ -138,6 +138,24 @@ ECOMAX360I_SENSORS = {
     "AxenOutgoingTemp",  # Heat pump supply/outgoing temperature
     "AxenReturnTemp",  # Heat pump return temperature
     "AxenCompressorFreq",  # Heat pump compressor frequency (Hz)
+    "AXENREGISTER64",  # Heat pump flow rate register
+    "AXENREGISTER65",  # Heat pump register 65
+    # informationParams sensors
+    "WaterPumpRunning",
+    "TargetFlowTemp",
+    "CHDHWValveState",
+    "ActualFlowTemp",
+    "ActualReturnTemp",
+    "FanSpeed",
+    "HeatPumpAmbient",
+    "HeatDemanded",
+    "ActualDHWTemp",
+    "Circuit1DesiredLWT",
+    "CHValveState",
+    "ElectricalPower",
+    "ThermalPower",
+    "COP",
+    "SCOP",
     # ecoMAX360 specific temperature circuit and buffer parameters
     "Circuit1ComfortTemp",  # Parameter 238 - Circuit 1 Day Temperature
     "Circuit1EcoTemp",  # Parameter 239 - Circuit 1 Night Temperature
@@ -155,6 +173,42 @@ ECOMAX360I_SENSORS = {
     "Circuit7ComfortTemp",  # Parameter 543 - Circuit 7 Day Temperature
     "Circuit7EcoTemp",  # Parameter 544 - Circuit 7 Night Temperature
 }
+
+# informationParams mapping (from editParams.informationParams section)
+# Maps parameter IDs to friendly sensor names
+INFORMATION_PARAMS_MAP = {
+    "11": "WaterPumpRunning",  # Water circulation pump status
+    "12": "TargetFlowTemp",  # Target/setpoint flow temperature
+    "13": "CHDHWValveState",  # CH/DHW 3-way valve state (0=DHW, 1=CH)
+    "14": "ActualFlowTemp",  # Actual flow temperature
+    "15": "ActualReturnTemp",  # Actual return temperature
+    "21": "CompressorFreqInfo",  # Compressor frequency (duplicate of AxenCompressorFreq)
+    "22": "FanSpeed",  # Heat pump fan speed (rpm)
+    "23": "HeatPumpAmbient",  # Heat pump reported ambient temperature
+    "26": "HeatDemanded",  # Heat demand status
+    "61": "ActualDHWTemp",  # Actual DHW/hot water temperature
+    "93": "Circuit1DesiredLWT",  # Circuit 1 desired leaving water temperature
+    "94": "CHValveState",  # Central heating valve state
+    "95": "InfoParam95",  # Unknown parameter 95
+    "211": "ElectricalPower",  # Heat pump electrical power consumption (kW)
+    "212": "ThermalPower",  # Heat pump thermal power output (kW)
+    "221": "COP",  # Current coefficient of performance
+    "222": "SCOP",  # Seasonal coefficient of performance
+}
+
+# Reverse mapping: friendly sensor name -> informationParams parameter ID
+# This allows entity_description.key to use the parameter ID for lookups
+INFORMATION_PARAMS_SENSOR_MAP = {v: k for k, v in INFORMATION_PARAMS_MAP.items()}
+
+# editParams data section sensor mappings
+# Maps friendly sensor names to their parameter IDs in editParams["data"]
+EDIT_PARAMS_DATA_MAP = {
+    "1211": "AXENREGISTER64",  # Heat pump flow rate register
+    "1212": "AXENREGISTER65",  # Heat pump register 65
+}
+
+# Reverse mapping: friendly sensor name -> editParams data parameter ID
+EDIT_PARAMS_DATA_SENSOR_MAP = {v: k for k, v in EDIT_PARAMS_DATA_MAP.items()}
 
 # ecoSTER thermostat sensors (if moduleEcoSTERSoftVer is not None)
 ECOSTER_SENSORS = {
@@ -364,6 +418,8 @@ ECOMAX360I_NUMBER_MAP = {
     "136": "HDWLegionSetPoint",  # Legionella protection temperature (60-80°C)
     "137": "HDWLegionDay",  # Legionella protection day of week (0-6)
     "138": "HDWLegionHour",  # Legionella protection hour (0-23)
+    "113": "HDWLoadTime",  # DHW loading time in minutes (0-50)
+    "115": "HDWStartOneLoading",  # DHW start one loading
     # System auto mode temperature thresholds
     "702": "SummerOn",  # Outdoor temp threshold to activate summer mode (26-30°C)
     "703": "SummerOff",  # Outdoor temp threshold to deactivate summer mode (0-26°C)
@@ -602,6 +658,27 @@ ENTITY_UNIT_MAP = {
     "protocolType": None,
     "controllerID": None,
     "ecosrvSoftVer": None,
+    # informationParams sensors (from editParams/informationParams)
+    "WaterPumpRunning": None,  # Pump status (0/1)
+    "TargetFlowTemp": UnitOfTemperature.CELSIUS,
+    "CHDHWValveState": None,  # Valve state (0=DHW, 1=CH)
+    "ActualFlowTemp": UnitOfTemperature.CELSIUS,
+    "ActualReturnTemp": UnitOfTemperature.CELSIUS,
+    "CompressorFreqInfo": "Hz",
+    "FanSpeed": "rpm",
+    "HeatPumpAmbient": UnitOfTemperature.CELSIUS,
+    "HeatDemanded": None,  # Status (0/1)
+    "ActualDHWTemp": UnitOfTemperature.CELSIUS,
+    "Circuit1DesiredLWT": UnitOfTemperature.CELSIUS,
+    "CHValveState": None,  # Valve state
+    "InfoParam95": None,  # Unknown parameter
+    "ElectricalPower": UnitOfPower.KILO_WATT,
+    "ThermalPower": UnitOfPower.KILO_WATT,
+    "COP": None,  # Coefficient (dimensionless ratio)
+    "SCOP": None,  # Coefficient (dimensionless ratio)
+    # editParams data sensors
+    "AXENREGISTER64": "L/min",  # Flow rate
+    "AXENREGISTER65": None,  # Unknown register
 }
 
 # =============================================================================
@@ -630,6 +707,13 @@ STATE_CLASS_MAP: dict[str, SensorStateClass | None] = {
     # ecoMAX360i
     "PS": None,
     "heating_work_state_pump4": None,
+    # informationParams sensors - valve states and statuses are not measurements
+    "WaterPumpRunning": None,  # Status (0/1)
+    "CHDHWValveState": None,  # Valve state enum
+    "HeatDemanded": None,  # Status (0/1)
+    "CHValveState": None,  # Valve state enum
+    "InfoParam95": None,  # Unknown
+    "SCOP": SensorStateClass.TOTAL,  # Seasonal coefficient (cumulative)
 }
 
 # =============================================================================
@@ -749,7 +833,20 @@ ENTITY_SENSOR_DEVICE_CLASS_MAP: dict[str, SensorDeviceClass | None] = {
     "protocolType": None,
     "controllerID": None,
     "ecosrvSoftVer": None,
+    # informationParams sensors (from editParams/informationParams)
+    "TargetFlowTemp": SensorDeviceClass.TEMPERATURE,
+    "ActualFlowTemp": SensorDeviceClass.TEMPERATURE,
+    "ActualReturnTemp": SensorDeviceClass.TEMPERATURE,
+    "CompressorFreqInfo": SensorDeviceClass.FREQUENCY,
+    "HeatPumpAmbient": SensorDeviceClass.TEMPERATURE,
+    "ActualDHWTemp": SensorDeviceClass.TEMPERATURE,
+    "Circuit1DesiredLWT": SensorDeviceClass.TEMPERATURE,
+    "ElectricalPower": SensorDeviceClass.POWER,
+    "ThermalPower": SensorDeviceClass.POWER,
+    "COP": SensorDeviceClass.POWER_FACTOR,  # Dimensionless ratio
+    "SCOP": SensorDeviceClass.POWER_FACTOR,  # Dimensionless ratio
 }
+
 
 # Number entity device classes
 ENTITY_NUMBER_SENSOR_DEVICE_CLASS_MAP = {

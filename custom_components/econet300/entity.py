@@ -17,6 +17,8 @@ from .const import (
     DEVICE_INFO_MIXER_NAME,
     DEVICE_INFO_MODEL,
     DOMAIN,
+    EDIT_PARAMS_DATA_SENSOR_MAP,
+    INFORMATION_PARAMS_SENSOR_MAP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,6 +76,7 @@ class EconetEntity(CoordinatorEntity):
         reg_params = self.coordinator.data.get("regParams", {})
         params_edits = self.coordinator.data.get("paramsEdits", {})
         edit_params = self.coordinator.data.get("editParams", {})
+        information_params = self.coordinator.data.get("informationParams", {})
 
         # Safety check: ensure all data sources are always dicts
         if sys_params is None:
@@ -88,29 +91,87 @@ class EconetEntity(CoordinatorEntity):
         if edit_params is None:
             edit_params = {}
             _LOGGER.info("editParams was None, defaulting to empty dict")
+        if information_params is None:
+            information_params = {}
+            _LOGGER.info("informationParams was None, defaulting to empty dict")
+
+        # For informationParams and editParams sensors, map friendly name to parameter ID
+        lookup_key = self.entity_description.key
+        if lookup_key in INFORMATION_PARAMS_SENSOR_MAP:
+            lookup_key = INFORMATION_PARAMS_SENSOR_MAP[lookup_key]
+            _LOGGER.info(
+                "Mapped sensor name '%s' to informationParams ID '%s'. informationParams has %d items, contains key: %s",
+                self.entity_description.key,
+                lookup_key,
+                len(information_params),
+                lookup_key in information_params
+            )
+        elif lookup_key in EDIT_PARAMS_DATA_SENSOR_MAP:
+            lookup_key = EDIT_PARAMS_DATA_SENSOR_MAP[lookup_key]
+            _LOGGER.info(
+                "Mapped sensor name '%s' to editParams data ID '%s'. editParams has %d items, contains key: %s",
+                self.entity_description.key,
+                lookup_key,
+                len(edit_params),
+                lookup_key in edit_params
+            )
 
         _LOGGER.debug(
-            "DEBUG: Looking for key '%s' in data sources - sysParams: %s, regParams: %s, paramsEdits: %s, editParams: %s",
+            "DEBUG: Looking for key '%s' (lookup_key: '%s') in data sources - sysParams: %s, regParams: %s, paramsEdits: %s, editParams: %s, informationParams: %s",
             self.entity_description.key,
-            self.entity_description.key in sys_params,
-            self.entity_description.key in reg_params,
-            self.entity_description.key in params_edits,
-            self.entity_description.key in edit_params,
+            lookup_key,
+            lookup_key in sys_params,
+            lookup_key in reg_params,
+            lookup_key in params_edits,
+            lookup_key in edit_params,
+            lookup_key in information_params,
         )
 
         value = None
-        if self.entity_description.key in sys_params:
-            value = sys_params[self.entity_description.key]
+        if lookup_key in sys_params:
+            value = sys_params[lookup_key]
             _LOGGER.debug("DEBUG: Found in sysParams: %s", value)
-        elif self.entity_description.key in reg_params:
-            value = reg_params[self.entity_description.key]
+        elif lookup_key in reg_params:
+            value = reg_params[lookup_key]
             _LOGGER.debug("DEBUG: Found in regParams: %s", value)
-        elif self.entity_description.key in params_edits:
-            value = params_edits[self.entity_description.key]
+        elif lookup_key in params_edits:
+            value = params_edits[lookup_key]
             _LOGGER.debug("DEBUG: Found in paramsEdits: %s", value)
-        elif self.entity_description.key in edit_params:
-            value = edit_params[self.entity_description.key]
-            _LOGGER.debug("DEBUG: Found in editParams: %s", value)
+        elif lookup_key in edit_params:
+            # editParams has dict structure with 'value' key
+            edit_data = edit_params[lookup_key]
+            if isinstance(edit_data, dict) and "value" in edit_data:
+                value = edit_data["value"]
+                _LOGGER.debug(
+                    "DEBUG: Found in editParams: %s (extracted from %s)",
+                    value,
+                    edit_data,
+                )
+            else:
+                value = edit_data
+                _LOGGER.debug("DEBUG: Found in editParams: %s", value)
+        elif lookup_key in information_params:
+            # informationParams has structure: [editable_flag, [[value, unit, type]]]
+            # Extract the value from position [1][0][0]
+            info_data = information_params[lookup_key]
+            if (
+                isinstance(info_data, list)
+                and len(info_data) > 1
+                and isinstance(info_data[1], list)
+                and len(info_data[1]) > 0
+            ):
+                value = info_data[1][0][0]  # Extract actual value
+                _LOGGER.debug(
+                    "DEBUG: Found in informationParams: %s (extracted from %s)",
+                    value,
+                    info_data,
+                )
+            else:
+                _LOGGER.warning(
+                    "Unexpected informationParams structure for key %s: %s",
+                    self.entity_description.key,
+                    info_data,
+                )
 
         if value is None:
             _LOGGER.debug("Value for key %s is None", self.entity_description.key)
@@ -140,77 +201,93 @@ class EconetEntity(CoordinatorEntity):
             _LOGGER.info("Coordinator data is None, skipping setup")
             return
 
-        # Retrieve sysParams and regParams paramsEdits editParams data
+        # Retrieve all data sources
         sys_params = self.coordinator.data.get("sysParams", {})
         reg_params = self.coordinator.data.get("regParams", {})
         params_edits = self.coordinator.data.get("paramsEdits", {})
         edit_params = self.coordinator.data.get("editParams", {})
+        information_params = self.coordinator.data.get("informationParams", {})
 
         # Safety check: ensure all data sources are always dicts
         if sys_params is None:
             sys_params = {}
-            _LOGGER.info(
-                "async_added_to_hass: sysParams was None, defaulting to empty dict"
-            )
         if reg_params is None:
             reg_params = {}
-            _LOGGER.info(
-                "async_added_to_hass: regParams was None, defaulting to empty dict"
-            )
         if params_edits is None:
             params_edits = {}
-            _LOGGER.info(
-                "async_added_to_hass: paramsEdits was None, defaulting to empty dict"
-            )
         if edit_params is None:
             edit_params = {}
-            _LOGGER.info(
-                "async_added_to_hass: editParams was None, defaulting to empty dict"
+        if information_params is None:
+            information_params = {}
+
+        # For informationParams and editParams sensors, map friendly name to parameter ID
+        lookup_key = self.entity_description.key
+        if lookup_key in INFORMATION_PARAMS_SENSOR_MAP:
+            lookup_key = INFORMATION_PARAMS_SENSOR_MAP[lookup_key]
+            _LOGGER.debug(
+                "async_added_to_hass: Mapped sensor name '%s' to informationParams ID '%s'",
+                self.entity_description.key,
+                lookup_key,
             )
-        # _LOGGER.debug("async_sysParams: %s", sys_params)
-        # _LOGGER.debug("async_regParams: %s", reg_params)
-        # _LOGGER.debug("async_paramsEdits: %s", params_edits)
-        # _LOGGER.debug("async_editParams: %s", edit_params)
+        elif lookup_key in EDIT_PARAMS_DATA_SENSOR_MAP:
+            lookup_key = EDIT_PARAMS_DATA_SENSOR_MAP[lookup_key]
+            _LOGGER.debug(
+                "async_added_to_hass: Mapped sensor name '%s' to editParams data ID '%s'",
+                self.entity_description.key,
+                lookup_key,
+            )
 
-        # Check the available keys in all sources
-        sys_keys = sys_params.keys() if sys_params is not None else []
-        reg_keys = reg_params.keys() if reg_params is not None else []
-        params_edit_keys = params_edits.keys() if params_edits is not None else []
-        edit_param_keys = edit_params.keys() if edit_params is not None else []
-        _LOGGER.debug("Available keys in sysParams: %s", sys_keys)
-        _LOGGER.debug("Available keys in regParams: %s", reg_keys)
-        _LOGGER.debug("Available keys in paramsEdits: %s", params_edit_keys)
-        _LOGGER.debug("Available keys in editParams: %s", edit_param_keys)
-
-        # Expected key from entity_description
-        expected_key = self.entity_description.key
-        _LOGGER.debug("Expected key: %s", expected_key)
-
-        # Retrieve the value from sysParams or regParams or paramsEdits or editParams
-        value = (
-            sys_params.get(expected_key)
-            if sys_params.get(expected_key) is not None
-            else (
-                reg_params.get(expected_key)
-                if reg_params.get(expected_key) is not None
-                else (
-                    params_edits.get(expected_key)
-                    if params_edits.get(expected_key) is not None
-                    else edit_params.get(expected_key)
+        # Retrieve the value from all data sources
+        value = None
+        if lookup_key in sys_params:
+            value = sys_params[lookup_key]
+            _LOGGER.debug("async_added_to_hass: Found in sysParams: %s", value)
+        elif lookup_key in reg_params:
+            value = reg_params[lookup_key]
+            _LOGGER.debug("async_added_to_hass: Found in regParams: %s", value)
+        elif lookup_key in params_edits:
+            value = params_edits[lookup_key]
+            _LOGGER.debug("async_added_to_hass: Found in paramsEdits: %s", value)
+        elif lookup_key in edit_params:
+            # editParams has dict structure with 'value' key
+            edit_data = edit_params[lookup_key]
+            if isinstance(edit_data, dict) and "value" in edit_data:
+                value = edit_data["value"]
+                _LOGGER.debug(
+                    "async_added_to_hass: Found in editParams: %s (extracted from %s)",
+                    value,
+                    edit_data,
                 )
-            )
-        )
+            else:
+                value = edit_data
+                _LOGGER.debug("async_added_to_hass: Found in editParams: %s", value)
+        elif lookup_key in information_params:
+            # informationParams has structure: [editable_flag, [[value, unit, type]]]
+            info_data = information_params[lookup_key]
+            if (
+                isinstance(info_data, list)
+                and len(info_data) > 1
+                and isinstance(info_data[1], list)
+                and len(info_data[1]) > 0
+            ):
+                value = info_data[1][0][0]  # Extract actual value
+                _LOGGER.debug(
+                    "async_added_to_hass: Found in informationParams: %s (extracted from %s)",
+                    value,
+                    info_data,
+                )
+            else:
+                _LOGGER.warning(
+                    "async_added_to_hass: Unexpected informationParams structure for key %s: %s",
+                    self.entity_description.key,
+                    info_data,
+                )
 
-        if value is not None:
-            _LOGGER.debug("Found key '%s' with value: %s", expected_key, value)
-        else:
-            _LOGGER.info(
-                "Data key: %s was expected to exist but it doesn't. Available sysParams keys: %s, regParams keys: %s, paramsEdits keys: %s, editParams keys: %s",
-                expected_key,
-                sys_keys,
-                reg_keys,
-                params_edit_keys,
-                edit_param_keys,
+        if value is None:
+            _LOGGER.debug(
+                "async_added_to_hass: Value for key %s (lookup_key: %s) is None",
+                self.entity_description.key,
+                lookup_key,
             )
             return
 
