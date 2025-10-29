@@ -57,6 +57,14 @@
           "on": "On",
           "schedule": "Schedule"
         }
+      },
+      "axen_work_state": {
+        "name": "Heat Pump Work State",
+        "state": {
+          "off": "Off",
+          "on": "On",
+          "schedule": "Schedule"
+        }
       }
     },
     "binary_sensor": {
@@ -212,9 +220,6 @@
       },
       "axen_compressor_freq": {
         "name": "Heat pump compressor frequency"
-      },
-      "axen_work_state": {
-        "name": "Heat pump status"
       },
       "lambda_status": {
         "name": "Lambda status",
@@ -390,8 +395,6 @@
       "temp_co_set": {
         "name": "Heating target temperature"
       },
-
-
       "valve_mixer1": {
         "name": "Mixer 1 valve % open"
       },

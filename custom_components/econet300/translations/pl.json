@@ -57,6 +57,14 @@
           "on": "Włączony",
           "schedule": "Harmonogram"
         }
+      },
+      "axen_work_state": {
+        "name": "Stan pracy pompy ciepła",
+        "state": {
+          "off": "Wyłączony",
+          "on": "Włączony",
+          "schedule": "Harmonogram"
+        }
       }
     },
     "binary_sensor": {
@@ -209,9 +217,6 @@
       },
       "axen_compressor_freq": {
         "name": "Częstotliwość sprężarki pompy ciepła"
-      },
-      "axen_work_state": {
-        "name": "Status pompy ciepła"
       },
       "lambda_status": {
         "name": "Lambda status",

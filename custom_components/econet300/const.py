@@ -138,7 +138,6 @@ ECOMAX360I_SENSORS = {
     "AxenOutgoingTemp",  # Heat pump supply/outgoing temperature
     "AxenReturnTemp",  # Heat pump return temperature
     "AxenCompressorFreq",  # Heat pump compressor frequency (Hz)
-    "AxenWorkState",  # Heat pump operating state
     # ecoMAX360 specific temperature circuit and buffer parameters
     "Circuit1ComfortTemp",  # Parameter 238 - Circuit 1 Day Temperature
     "Circuit1EcoTemp",  # Parameter 239 - Circuit 1 Night Temperature
@@ -437,12 +436,20 @@ DHW_WORK_MODE_VALUES = {
     2: "schedule",
 }
 
+# Heat Pump Work State - AxenWorkState parameter (ecoMAX360i)
+AXEN_WORK_STATE_VALUES = {
+    0: "off",
+    1: "on",
+    2: "schedule",
+}
+
 # Select entity mapping by controller type
 SELECT_MAP_KEY = {
     "ecoMAX360i": {
         "236": ("circuit1_work_state", CIRCUIT1_WORK_STATE_VALUES),
         "162": ("system_work_mode", SYSTEM_WORK_MODE_VALUES),
         "119": ("dhw_work_mode", DHW_WORK_MODE_VALUES),
+        "1133": ("axen_work_state", AXEN_WORK_STATE_VALUES),
     },
     "_default": {
         "55": ("heater_mode", HEATER_MODE_VALUES),
