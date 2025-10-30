@@ -138,7 +138,7 @@ ECOMAX360I_SENSORS = {
     "AxenOutgoingTemp",  # Heat pump supply/outgoing temperature
     "AxenReturnTemp",  # Heat pump return temperature
     "AxenCompressorFreq",  # Heat pump compressor frequency (Hz)
-    "AXENREGISTER64",  # Heat pump flow rate register
+    "AXENREGISTER64",  # Heat pump register 64
     "AXENREGISTER65",  # Heat pump register 65
     # informationParams sensors
     "WaterPumpRunning",
@@ -156,6 +156,7 @@ ECOMAX360I_SENSORS = {
     "ThermalPower",
     "COP",
     "SCOP",
+    "FlowRate",
     # ecoMAX360 specific temperature circuit and buffer parameters
     "Circuit1ComfortTemp",  # Parameter 238 - Circuit 1 Day Temperature
     "Circuit1EcoTemp",  # Parameter 239 - Circuit 1 Night Temperature
@@ -194,6 +195,7 @@ INFORMATION_PARAMS_MAP = {
     "212": "ThermalPower",  # Heat pump thermal power output (kW)
     "221": "COP",  # Current coefficient of performance
     "222": "SCOP",  # Seasonal coefficient of performance
+    "231": "FlowRate",  # Flow rate
 }
 
 # Reverse mapping: friendly sensor name -> informationParams parameter ID
@@ -203,7 +205,7 @@ INFORMATION_PARAMS_SENSOR_MAP = {v: k for k, v in INFORMATION_PARAMS_MAP.items()
 # editParams data section sensor mappings
 # Maps friendly sensor names to their parameter IDs in editParams["data"]
 EDIT_PARAMS_DATA_MAP = {
-    "1211": "AXENREGISTER64",  # Heat pump flow rate register
+    "1211": "AXENREGISTER64",  # Heat pump register 64
     "1212": "AXENREGISTER65",  # Heat pump register 65
 }
 
@@ -666,6 +668,7 @@ ENTITY_UNIT_MAP = {
     "ActualReturnTemp": UnitOfTemperature.CELSIUS,
     "CompressorFreqInfo": "Hz",
     "FanSpeed": "rpm",
+    "FlowRate": "L/s",
     "HeatPumpAmbient": UnitOfTemperature.CELSIUS,
     "HeatDemanded": None,  # Status (0/1)
     "ActualDHWTemp": UnitOfTemperature.CELSIUS,
@@ -677,7 +680,7 @@ ENTITY_UNIT_MAP = {
     "COP": None,  # Coefficient (dimensionless ratio)
     "SCOP": None,  # Coefficient (dimensionless ratio)
     # editParams data sensors
-    "AXENREGISTER64": "L/min",  # Flow rate
+    "AXENREGISTER64": None,  # Unknown register
     "AXENREGISTER65": None,  # Unknown register
 }
 

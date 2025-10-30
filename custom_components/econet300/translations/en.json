@@ -222,7 +222,7 @@
         "name": "Heat pump compressor frequency"
       },
       "axenregister64": {
-        "name": "Heat Pump Flow Rate"
+        "name": "Heat Pump Register 64"
       },
       "axenregister65": {
         "name": "Heat Pump Register 65"
@@ -277,6 +277,9 @@
       },
       "scop": {
         "name": "SCOP"
+      },
+      "flow_rate": {
+        "name": "Heat Pump Flow Rate"
       },
       "lambda_status": {
         "name": "Lambda status",

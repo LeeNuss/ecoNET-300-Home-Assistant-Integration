@@ -219,7 +219,7 @@
         "name": "Częstotliwość sprężarki pompy ciepła"
       },
       "axenregister64": {
-        "name": "Przepływ pompy ciepła"
+        "name": "Rejestr 64 pompy ciepła"
       },
       "axenregister65": {
         "name": "Rejestr 65 pompy ciepła"
@@ -274,6 +274,9 @@
       },
       "scop": {
         "name": "Sezonowy współczynnik wydajności"
+      },
+      "flow_rate": {
+        "name": "Przepływ pompy ciepła"
       },
       "lambda_status": {
         "name": "Lambda status",
