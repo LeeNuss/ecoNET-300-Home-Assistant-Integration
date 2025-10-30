@@ -96,9 +96,13 @@ class EconetEntity(CoordinatorEntity):
             _LOGGER.info("informationParams was None, defaulting to empty dict")
 
         # For informationParams and editParams sensors, map friendly name to parameter ID
+        # and determine which data source to use
         lookup_key = self.entity_description.key
+        data_source = None  # Track which data source this sensor should use
+
         if lookup_key in INFORMATION_PARAMS_SENSOR_MAP:
             lookup_key = INFORMATION_PARAMS_SENSOR_MAP[lookup_key]
+            data_source = "informationParams"
             _LOGGER.info(
                 "Mapped sensor name '%s' to informationParams ID '%s'. informationParams has %d items, contains key: %s",
                 self.entity_description.key,
@@ -108,6 +112,7 @@ class EconetEntity(CoordinatorEntity):
             )
         elif lookup_key in EDIT_PARAMS_DATA_SENSOR_MAP:
             lookup_key = EDIT_PARAMS_DATA_SENSOR_MAP[lookup_key]
+            data_source = "editParams"
             _LOGGER.info(
                 "Mapped sensor name '%s' to editParams data ID '%s'. editParams has %d items, contains key: %s",
                 self.entity_description.key,
@@ -117,7 +122,7 @@ class EconetEntity(CoordinatorEntity):
             )
 
         _LOGGER.debug(
-            "DEBUG: Looking for key '%s' (lookup_key: '%s') in data sources - sysParams: %s, regParams: %s, paramsEdits: %s, editParams: %s, informationParams: %s",
+            "DEBUG: Looking for key '%s' (lookup_key: '%s') in data sources - sysParams: %s, regParams: %s, paramsEdits: %s, editParams: %s, informationParams: %s, forced source: %s",
             self.entity_description.key,
             lookup_key,
             lookup_key in sys_params,
@@ -125,53 +130,92 @@ class EconetEntity(CoordinatorEntity):
             lookup_key in params_edits,
             lookup_key in edit_params,
             lookup_key in information_params,
+            data_source,
         )
 
         value = None
-        if lookup_key in sys_params:
-            value = sys_params[lookup_key]
-            _LOGGER.debug("DEBUG: Found in sysParams: %s", value)
-        elif lookup_key in reg_params:
-            value = reg_params[lookup_key]
-            _LOGGER.debug("DEBUG: Found in regParams: %s", value)
-        elif lookup_key in params_edits:
-            value = params_edits[lookup_key]
-            _LOGGER.debug("DEBUG: Found in paramsEdits: %s", value)
-        elif lookup_key in edit_params:
-            # editParams has dict structure with 'value' key
-            edit_data = edit_params[lookup_key]
-            if isinstance(edit_data, dict) and "value" in edit_data:
-                value = edit_data["value"]
-                _LOGGER.debug(
-                    "DEBUG: Found in editParams: %s (extracted from %s)",
-                    value,
-                    edit_data,
-                )
-            else:
-                value = edit_data
-                _LOGGER.debug("DEBUG: Found in editParams: %s", value)
-        elif lookup_key in information_params:
-            # informationParams has structure: [editable_flag, [[value, unit, type]]]
-            # Extract the value from position [1][0][0]
-            info_data = information_params[lookup_key]
-            if (
-                isinstance(info_data, list)
-                and len(info_data) > 1
-                and isinstance(info_data[1], list)
-                and len(info_data[1]) > 0
-            ):
-                value = info_data[1][0][0]  # Extract actual value
-                _LOGGER.debug(
-                    "DEBUG: Found in informationParams: %s (extracted from %s)",
-                    value,
-                    info_data,
-                )
-            else:
-                _LOGGER.warning(
-                    "Unexpected informationParams structure for key %s: %s",
-                    self.entity_description.key,
-                    info_data,
-                )
+
+        # If sensor is explicitly mapped to informationParams, ONLY check there
+        if data_source == "informationParams":
+            if lookup_key in information_params:
+                info_data = information_params[lookup_key]
+                if (
+                    isinstance(info_data, list)
+                    and len(info_data) > 1
+                    and isinstance(info_data[1], list)
+                    and len(info_data[1]) > 0
+                ):
+                    value = info_data[1][0][0]  # Extract actual value
+                    _LOGGER.debug(
+                        "DEBUG: Found in informationParams: %s (extracted from %s)",
+                        value,
+                        info_data,
+                    )
+                else:
+                    _LOGGER.warning(
+                        "Unexpected informationParams structure for key %s: %s",
+                        self.entity_description.key,
+                        info_data,
+                    )
+        # If sensor is explicitly mapped to editParams, ONLY check there
+        elif data_source == "editParams":
+            if lookup_key in edit_params:
+                edit_data = edit_params[lookup_key]
+                if isinstance(edit_data, dict) and "value" in edit_data:
+                    value = edit_data["value"]
+                    _LOGGER.debug(
+                        "DEBUG: Found in editParams: %s (extracted from %s)",
+                        value,
+                        edit_data,
+                    )
+                else:
+                    value = edit_data
+                    _LOGGER.debug("DEBUG: Found in editParams: %s", value)
+        # Otherwise, check all sources in priority order
+        else:
+            if lookup_key in sys_params:
+                value = sys_params[lookup_key]
+                _LOGGER.debug("DEBUG: Found in sysParams: %s", value)
+            elif lookup_key in reg_params:
+                value = reg_params[lookup_key]
+                _LOGGER.debug("DEBUG: Found in regParams: %s", value)
+            elif lookup_key in params_edits:
+                value = params_edits[lookup_key]
+                _LOGGER.debug("DEBUG: Found in paramsEdits: %s", value)
+            elif lookup_key in edit_params:
+                # editParams has dict structure with 'value' key
+                edit_data = edit_params[lookup_key]
+                if isinstance(edit_data, dict) and "value" in edit_data:
+                    value = edit_data["value"]
+                    _LOGGER.debug(
+                        "DEBUG: Found in editParams: %s (extracted from %s)",
+                        value,
+                        edit_data,
+                    )
+                else:
+                    value = edit_data
+                    _LOGGER.debug("DEBUG: Found in editParams: %s", value)
+            elif lookup_key in information_params:
+                # informationParams has structure: [editable_flag, [[value, unit, type]]]
+                info_data = information_params[lookup_key]
+                if (
+                    isinstance(info_data, list)
+                    and len(info_data) > 1
+                    and isinstance(info_data[1], list)
+                    and len(info_data[1]) > 0
+                ):
+                    value = info_data[1][0][0]  # Extract actual value
+                    _LOGGER.debug(
+                        "DEBUG: Found in informationParams: %s (extracted from %s)",
+                        value,
+                        info_data,
+                    )
+                else:
+                    _LOGGER.warning(
+                        "Unexpected informationParams structure for key %s: %s",
+                        self.entity_description.key,
+                        info_data,
+                    )
 
         if value is None:
             _LOGGER.debug("Value for key %s is None", self.entity_description.key)
@@ -221,9 +265,13 @@ class EconetEntity(CoordinatorEntity):
             information_params = {}
 
         # For informationParams and editParams sensors, map friendly name to parameter ID
+        # and determine which data source to use
         lookup_key = self.entity_description.key
+        data_source = None  # Track which data source this sensor should use
+
         if lookup_key in INFORMATION_PARAMS_SENSOR_MAP:
             lookup_key = INFORMATION_PARAMS_SENSOR_MAP[lookup_key]
+            data_source = "informationParams"
             _LOGGER.debug(
                 "async_added_to_hass: Mapped sensor name '%s' to informationParams ID '%s'",
                 self.entity_description.key,
@@ -231,57 +279,63 @@ class EconetEntity(CoordinatorEntity):
             )
         elif lookup_key in EDIT_PARAMS_DATA_SENSOR_MAP:
             lookup_key = EDIT_PARAMS_DATA_SENSOR_MAP[lookup_key]
+            data_source = "editParams"
             _LOGGER.debug(
                 "async_added_to_hass: Mapped sensor name '%s' to editParams data ID '%s'",
                 self.entity_description.key,
                 lookup_key,
             )
 
-        # Retrieve the value from all data sources
+        # Retrieve the value from the appropriate data source
         value = None
-        if lookup_key in sys_params:
-            value = sys_params[lookup_key]
-            _LOGGER.debug("async_added_to_hass: Found in sysParams: %s", value)
-        elif lookup_key in reg_params:
-            value = reg_params[lookup_key]
-            _LOGGER.debug("async_added_to_hass: Found in regParams: %s", value)
-        elif lookup_key in params_edits:
-            value = params_edits[lookup_key]
-            _LOGGER.debug("async_added_to_hass: Found in paramsEdits: %s", value)
-        elif lookup_key in edit_params:
-            # editParams has dict structure with 'value' key
-            edit_data = edit_params[lookup_key]
-            if isinstance(edit_data, dict) and "value" in edit_data:
-                value = edit_data["value"]
-                _LOGGER.debug(
-                    "async_added_to_hass: Found in editParams: %s (extracted from %s)",
-                    value,
-                    edit_data,
-                )
-            else:
-                value = edit_data
-                _LOGGER.debug("async_added_to_hass: Found in editParams: %s", value)
-        elif lookup_key in information_params:
-            # informationParams has structure: [editable_flag, [[value, unit, type]]]
-            info_data = information_params[lookup_key]
-            if (
-                isinstance(info_data, list)
-                and len(info_data) > 1
-                and isinstance(info_data[1], list)
-                and len(info_data[1]) > 0
-            ):
-                value = info_data[1][0][0]  # Extract actual value
-                _LOGGER.debug(
-                    "async_added_to_hass: Found in informationParams: %s (extracted from %s)",
-                    value,
-                    info_data,
-                )
-            else:
-                _LOGGER.warning(
-                    "async_added_to_hass: Unexpected informationParams structure for key %s: %s",
-                    self.entity_description.key,
-                    info_data,
-                )
+
+        # If sensor is explicitly mapped to informationParams, ONLY check there
+        if data_source == "informationParams":
+            if lookup_key in information_params:
+                info_data = information_params[lookup_key]
+                if (
+                    isinstance(info_data, list)
+                    and len(info_data) > 1
+                    and isinstance(info_data[1], list)
+                    and len(info_data[1]) > 0
+                ):
+                    value = info_data[1][0][0]  # Extract actual value
+                    _LOGGER.debug(
+                        "async_added_to_hass: Found in informationParams: %s (extracted from %s)",
+                        value,
+                        info_data,
+                    )
+                else:
+                    _LOGGER.warning(
+                        "async_added_to_hass: Unexpected informationParams structure for key %s: %s",
+                        self.entity_description.key,
+                        info_data,
+                    )
+        # If sensor is explicitly mapped to editParams, ONLY check there
+        elif data_source == "editParams":
+            if lookup_key in edit_params:
+                edit_data = edit_params[lookup_key]
+                if isinstance(edit_data, dict) and "value" in edit_data:
+                    value = edit_data["value"]
+                    _LOGGER.debug(
+                        "async_added_to_hass: Found in editParams: %s (extracted from %s)",
+                        value,
+                        edit_data,
+                    )
+                else:
+                    value = edit_data
+                    _LOGGER.debug("async_added_to_hass: Found in editParams: %s", value)
+        # Otherwise, check all sources in priority order
+        else:
+            if lookup_key in sys_params:
+                value = sys_params[lookup_key]
+                _LOGGER.debug("async_added_to_hass: Found in sysParams: %s", value)
+            elif lookup_key in reg_params:
+                value = reg_params[lookup_key]
+                _LOGGER.debug("async_added_to_hass: Found in regParams: %s", value)
+            elif lookup_key in params_edits:
+                value = params_edits[lookup_key]
+                _LOGGER.debug("async_added_to_hass: Found in paramsEdits: %s", value)
 
         if value is None:
             _LOGGER.debug(

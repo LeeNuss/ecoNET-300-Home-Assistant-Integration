@@ -984,6 +984,23 @@ ENTITY_PRECISION = {
     "routerType": None,
     "protocolType": None,
     "ecosrvSoftVer": None,
+    # informationParams sensors precision
+    "TargetFlowTemp": 1,  # Temperature
+    "ActualFlowTemp": 1,  # Temperature
+    "ActualReturnTemp": 1,  # Temperature
+    "CompressorFreqInfo": 0,  # Frequency (integer Hz)
+    "FanSpeed": 0,  # RPM (integer)
+    "HeatPumpAmbient": 1,  # Temperature
+    "ActualDHWTemp": 1,  # Temperature
+    "Circuit1DesiredLWT": 1,  # Temperature
+    "ElectricalPower": 2,  # Power in kW (2 decimals)
+    "ThermalPower": 2,  # Power in kW (2 decimals)
+    "COP": 2,  # Coefficient (2 decimals)
+    "SCOP": 2,  # Coefficient (2 decimals)
+    "FlowRate": 1,  # Flow rate (1 decimal)
+    # editParams data sensors precision
+    "AXENREGISTER64": 1,  # Flow rate in L/min
+    "AXENREGISTER65": 0,  # Unknown register
 }
 
 NO_CWU_TEMP_SET_STATUS_CODE = 128
