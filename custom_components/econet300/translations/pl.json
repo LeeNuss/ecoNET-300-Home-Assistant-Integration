@@ -225,7 +225,12 @@
         "name": "Rejestr 65 pompy ciepła"
       },
       "water_pump_running": {
-        "name": "Status pompy obiegowej wody"
+        "name": "Status pompy obiegowej wody",
+        "state": {
+          "on": "Włączona",
+          "unknown": "Nieznany",
+          "off": "Wyłączona"
+        }
       },
       "target_flow_temp": {
         "name": "Docelowa temperatura zasilania"
@@ -249,7 +254,11 @@
         "name": "Temperatura otoczenia pompy ciepła"
       },
       "heat_demanded": {
-        "name": "Status zapotrzebowania na ciepło"
+        "name": "Status zapotrzebowania na ciepło",
+        "state": {
+          "heating": "Ogrzewanie",
+          "off": "Wyłączone"
+        }
       },
       "actual_dhw_temp": {
         "name": "Rzeczywista temperatura CWU"

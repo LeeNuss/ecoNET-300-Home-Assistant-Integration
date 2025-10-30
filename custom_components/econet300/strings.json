@@ -237,7 +237,12 @@
                 "name": "Heat Pump Register 65"
             },
             "water_pump_running": {
-                "name": "Water Circulation Pump Status"
+                "name": "Water Circulation Pump Status",
+                "state": {
+                    "on": "On",
+                    "unknown": "Unknown",
+                    "off": "Off"
+                }
             },
             "target_flow_temp": {
                 "name": "Target Flow Temperature"
@@ -261,7 +266,11 @@
                 "name": "Heat Pump Ambient Temperature"
             },
             "heat_demanded": {
-                "name": "Heat Demand Status"
+                "name": "Heat Demand Status",
+                "state": {
+                    "heating": "Heating",
+                    "off": "Off"
+                }
             },
             "actual_dhw_temp": {
                 "name": "Actual DHW Temperature"

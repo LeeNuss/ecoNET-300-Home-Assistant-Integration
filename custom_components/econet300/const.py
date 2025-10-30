@@ -141,17 +141,15 @@ ECOMAX360I_SENSORS = {
     "AXENREGISTER64",  # Heat pump register 64
     "AXENREGISTER65",  # Heat pump register 65
     # informationParams sensors
-    "WaterPumpRunning",
+    "WaterPumpRunning",  # Enum: 0=on, 1=unknown, 2=off
     "TargetFlowTemp",
-    "CHDHWValveState",
     "ActualFlowTemp",
     "ActualReturnTemp",
     "FanSpeed",
     "HeatPumpAmbient",
-    "HeatDemanded",
+    "HeatDemanded",  # Enum: 0=heating, 1=off
     "ActualDHWTemp",
     "Circuit1DesiredLWT",
-    "CHValveState",
     "ElectricalPower",
     "ThermalPower",
     "COP",
@@ -178,18 +176,16 @@ ECOMAX360I_SENSORS = {
 # informationParams mapping (from editParams.informationParams section)
 # Maps parameter IDs to friendly sensor names
 INFORMATION_PARAMS_MAP = {
-    "11": "WaterPumpRunning",  # Water circulation pump status
+    "11": "WaterPumpRunning",  # Water circulation pump status (0=on, 1=unknown, 2=off)
     "12": "TargetFlowTemp",  # Target/setpoint flow temperature
-    "13": "CHDHWValveState",  # CH/DHW 3-way valve state (0=DHW, 1=CH)
     "14": "ActualFlowTemp",  # Actual flow temperature
     "15": "ActualReturnTemp",  # Actual return temperature
     "21": "CompressorFreqInfo",  # Compressor frequency (duplicate of AxenCompressorFreq)
     "22": "FanSpeed",  # Heat pump fan speed (rpm)
     "23": "HeatPumpAmbient",  # Heat pump reported ambient temperature
-    "26": "HeatDemanded",  # Heat demand status
+    "26": "HeatDemanded",  # Heat demand status (0=heating, 1=off)
     "61": "ActualDHWTemp",  # Actual DHW/hot water temperature
     "93": "Circuit1DesiredLWT",  # Circuit 1 desired leaving water temperature
-    "94": "CHValveState",  # Central heating valve state
     "95": "InfoParam95",  # Unknown parameter 95
     "211": "ElectricalPower",  # Heat pump electrical power consumption (kW)
     "212": "ThermalPower",  # Heat pump thermal power output (kW)
@@ -661,24 +657,22 @@ ENTITY_UNIT_MAP = {
     "controllerID": None,
     "ecosrvSoftVer": None,
     # informationParams sensors (from editParams/informationParams)
-    "WaterPumpRunning": None,  # Pump status (0/1)
+    "WaterPumpRunning": None,
     "TargetFlowTemp": UnitOfTemperature.CELSIUS,
-    "CHDHWValveState": None,  # Valve state (0=DHW, 1=CH)
     "ActualFlowTemp": UnitOfTemperature.CELSIUS,
     "ActualReturnTemp": UnitOfTemperature.CELSIUS,
     "CompressorFreqInfo": "Hz",
     "FanSpeed": "rpm",
-    "FlowRate": "L/s",
     "HeatPumpAmbient": UnitOfTemperature.CELSIUS,
-    "HeatDemanded": None,  # Status (0/1)
+    "HeatDemanded": None,  # Status enum (0=heating, 1=off)
     "ActualDHWTemp": UnitOfTemperature.CELSIUS,
     "Circuit1DesiredLWT": UnitOfTemperature.CELSIUS,
-    "CHValveState": None,  # Valve state
     "InfoParam95": None,  # Unknown parameter
     "ElectricalPower": UnitOfPower.KILO_WATT,
     "ThermalPower": UnitOfPower.KILO_WATT,
     "COP": None,  # Coefficient (dimensionless ratio)
     "SCOP": None,  # Coefficient (dimensionless ratio)
+    "FlowRate": "L/min",  # Flow rate in liters per minute
     # editParams data sensors
     "AXENREGISTER64": None,  # Unknown register
     "AXENREGISTER65": None,  # Unknown register
@@ -711,10 +705,8 @@ STATE_CLASS_MAP: dict[str, SensorStateClass | None] = {
     "PS": None,
     "heating_work_state_pump4": None,
     # informationParams sensors - valve states and statuses are not measurements
-    "WaterPumpRunning": None,  # Status (0/1)
-    "CHDHWValveState": None,  # Valve state enum
-    "HeatDemanded": None,  # Status (0/1)
-    "CHValveState": None,  # Valve state enum
+    "WaterPumpRunning": None,  # Enum (0=on, 1=unknown, 2=off)
+    "HeatDemanded": None,  # Enum (0=heating, 1=off)
     "InfoParam95": None,  # Unknown
     "SCOP": SensorStateClass.TOTAL,  # Seasonal coefficient (cumulative)
 }
@@ -985,12 +977,14 @@ ENTITY_PRECISION = {
     "protocolType": None,
     "ecosrvSoftVer": None,
     # informationParams sensors precision
+    "WaterPumpRunning": None,  # Enum (0=on, 1=unknown, 2=off)
     "TargetFlowTemp": 1,  # Temperature
     "ActualFlowTemp": 1,  # Temperature
     "ActualReturnTemp": 1,  # Temperature
     "CompressorFreqInfo": 0,  # Frequency (integer Hz)
     "FanSpeed": 0,  # RPM (integer)
     "HeatPumpAmbient": 1,  # Temperature
+    "HeatDemanded": None,  # Enum (0=heating, 1=off)
     "ActualDHWTemp": 1,  # Temperature
     "Circuit1DesiredLWT": 1,  # Temperature
     "ElectricalPower": 2,  # Power in kW (2 decimals)
@@ -1012,6 +1006,8 @@ ENTITY_VALUE_PROCESSOR = {
     "statusCO": lambda x: SENSOR_STATUS_CO_MAPPING.get(x, STATE_UNKNOWN),
     "thermostat": lambda x: SENSOR_THERMOSTAT_MAPPING.get(x, STATE_UNKNOWN),
     "flapValveStates": lambda x: SENSOR_FLAP_VALVE_STATES_MAPPING.get(x, STATE_UNKNOWN),
+    "HeatDemanded": lambda x: SENSOR_HEAT_DEMANDED_MAPPING.get(x, STATE_UNKNOWN),
+    "WaterPumpRunning": lambda x: SENSOR_WATER_PUMP_RUNNING_MAPPING.get(x, STATE_UNKNOWN),
 }
 
 # =============================================================================
@@ -1156,4 +1152,15 @@ SENSOR_THERMOSTAT_MAPPING: dict[int, str] = {
 SENSOR_FLAP_VALVE_STATES_MAPPING: dict[int, str] = {
     0: "CH",  # Central Heating
     3: "DHW",  # Domestic Hot Water
+}
+
+SENSOR_HEAT_DEMANDED_MAPPING: dict[int, str] = {
+    0: "heat",  # Heat is being demanded/requested
+    1: "off",  # No heat demand
+}
+
+SENSOR_WATER_PUMP_RUNNING_MAPPING: dict[int, str] = {
+    0: "on",  # Water circulation pump is running
+    1: "unknown",  # Unknown state
+    2: "off",  # Water circulation pump is off
 }
