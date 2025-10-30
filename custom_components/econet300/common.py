@@ -132,12 +132,12 @@ class EconetDataCoordinator(DataUpdateCoordinator):
                 _LOGGER.info(
                     "Coordinator data: editParams has %d items, informationParams has %d items",
                     len(edit_params_data),
-                    len(information_params)
+                    len(information_params),
                 )
                 if information_params:
                     _LOGGER.debug(
                         "informationParams sample keys: %s",
-                        list(information_params.keys())[:10]
+                        list(information_params.keys())[:10],
                     )
 
                 # Fetch regular parameters from ../econet/regParams

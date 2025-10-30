@@ -209,6 +209,21 @@
           "dhw": "Hot water"
         }
       },
+      "water_pump_running": {
+        "name": "Water Circulation Pump Status",
+        "state": {
+          "on": "On",
+          "unknown": "Unknown",
+          "off": "Off"
+        }
+      },
+      "heat_demanded": {
+        "name": "Heat Demand Status",
+        "state": {
+          "heating": "Heating",
+          "off": "Off"
+        }
+      },
       "axen_outdoor_temp": {
         "name": "Heat pump outdoor temperature"
       },
@@ -226,14 +241,6 @@
       },
       "axenregister65": {
         "name": "Heat Pump Register 65"
-      },
-      "water_pump_running": {
-        "name": "Water Circulation Pump Status",
-        "state": {
-          "on": "On",
-          "unknown": "Unknown",
-          "off": "Off"
-        }
       },
       "target_flow_temp": {
         "name": "Target Flow Temperature"
@@ -255,13 +262,6 @@
       },
       "heat_pump_ambient": {
         "name": "Heat Pump Ambient Temperature"
-      },
-      "heat_demanded": {
-        "name": "Heat Demand Status",
-        "state": {
-          "heating": "Heating",
-          "off": "Off"
-        }
       },
       "actual_dhw_temp": {
         "name": "Actual DHW Temperature"

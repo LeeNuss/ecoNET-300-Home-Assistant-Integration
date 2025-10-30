@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import Econet300Api
 from .common import EconetDataCoordinator, skip_edit_params, skip_params_edits
+from .common_functions import camel_to_snake
 from .const import DOMAIN, SELECT_MAP_KEY, SERVICE_API, SERVICE_COORDINATOR
 from .entity import EconetEntity
 
@@ -226,7 +227,7 @@ async def async_setup_entry(
     select_map = SELECT_MAP_KEY.get(controller_id, SELECT_MAP_KEY["_default"])
 
     entities = []
-    for param_index, (entity_key, value_mapping) in select_map.items():
+    for key, (param_index, value_mapping) in select_map.items():
         # Check if parameter exists in coordinator data
         has_params_edits = not skip_params_edits(sys_params)
         has_edit_params = not skip_edit_params(sys_params)
@@ -244,16 +245,16 @@ async def async_setup_entry(
             _LOGGER.debug(
                 "Parameter %s not found in coordinator data, skipping select entity %s",
                 param_index,
-                entity_key,
+                key,
             )
             continue
 
         # Create select entity description
         # Use param_index as key so base entity can find data in coordinator
         entity_description = SelectEntityDescription(
-            key=param_index,
-            translation_key=entity_key,
-            icon="mdi:dip-switch" if "work_state" in entity_key else "mdi:thermostat",
+            key=key,
+            translation_key=camel_to_snake(key),
+            icon="mdi:dip-switch" if "work_state" in key else "mdi:thermostat",
         )
 
         # Create select entity
@@ -262,7 +263,7 @@ async def async_setup_entry(
                 entity_description, coordinator, api, param_index, value_mapping
             )
         )
-        _LOGGER.debug("Created select entity: %s (param: %s)", entity_key, param_index)
+        _LOGGER.debug("Created select entity: %s (param: %s)", key, param_index)
 
     _LOGGER.info("Adding %d select entities", len(entities))
     async_add_entities(entities)

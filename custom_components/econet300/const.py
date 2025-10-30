@@ -133,6 +133,8 @@ ECOMAX360I_SENSORS = {
     "Circuit1thermostat",
     "heating_work_state_pump4",
     "flapValveStates",  # 3-way valve state: 0=CH (Central Heating), 3=DHW (Domestic Hot Water)
+    "HeatDemanded",  # Enum: 0=heating, 1=off
+    "WaterPumpRunning",  # Enum: 0=on, 1=unknown, 2=off
     # Heat pump (Axen) sensors
     "AxenOutdoorTemp",  # Heat pump outdoor temperature
     "AxenOutgoingTemp",  # Heat pump supply/outgoing temperature
@@ -141,13 +143,11 @@ ECOMAX360I_SENSORS = {
     "AXENREGISTER64",  # Heat pump register 64
     "AXENREGISTER65",  # Heat pump register 65
     # informationParams sensors
-    "WaterPumpRunning",  # Enum: 0=on, 1=unknown, 2=off
     "TargetFlowTemp",
     "ActualFlowTemp",
     "ActualReturnTemp",
     "FanSpeed",
     "HeatPumpAmbient",
-    "HeatDemanded",  # Enum: 0=heating, 1=off
     "ActualDHWTemp",
     "Circuit1DesiredLWT",
     "ElectricalPower",
@@ -174,39 +174,32 @@ ECOMAX360I_SENSORS = {
 }
 
 # informationParams mapping (from editParams.informationParams section)
-# Maps parameter IDs to friendly sensor names
-INFORMATION_PARAMS_MAP = {
-    "11": "WaterPumpRunning",  # Water circulation pump status (0=on, 1=unknown, 2=off)
-    "12": "TargetFlowTemp",  # Target/setpoint flow temperature
-    "14": "ActualFlowTemp",  # Actual flow temperature
-    "15": "ActualReturnTemp",  # Actual return temperature
-    "21": "CompressorFreqInfo",  # Compressor frequency (duplicate of AxenCompressorFreq)
-    "22": "FanSpeed",  # Heat pump fan speed (rpm)
-    "23": "HeatPumpAmbient",  # Heat pump reported ambient temperature
-    "26": "HeatDemanded",  # Heat demand status (0=heating, 1=off)
-    "61": "ActualDHWTemp",  # Actual DHW/hot water temperature
-    "93": "Circuit1DesiredLWT",  # Circuit 1 desired leaving water temperature
-    "95": "InfoParam95",  # Unknown parameter 95
-    "211": "ElectricalPower",  # Heat pump electrical power consumption (kW)
-    "212": "ThermalPower",  # Heat pump thermal power output (kW)
-    "221": "COP",  # Current coefficient of performance
-    "222": "SCOP",  # Seasonal coefficient of performance
-    "231": "FlowRate",  # Flow rate
+# Maps friendly sensor names to their parameter IDs in informationParams
+INFORMATION_PARAMS_SENSOR_MAP = {
+    "WaterPumpRunning": "11",  # Water circulation pump status (0=on, 1=unknown, 2=off)
+    "TargetFlowTemp": "12",  # Target/setpoint flow temperature
+    "ActualFlowTemp": "14",  # Actual flow temperature
+    "ActualReturnTemp": "15",  # Actual return temperature
+    "CompressorFreqInfo": "21",  # Compressor frequency (duplicate of AxenCompressorFreq)
+    "FanSpeed": "22",  # Heat pump fan speed (rpm)
+    "HeatPumpAmbient": "23",  # Heat pump reported ambient temperature
+    "HeatDemanded": "26",  # Heat demand status (0=heating, 1=off)
+    "ActualDHWTemp": "61",  # Actual DHW/hot water temperature
+    "Circuit1DesiredLWT": "93",  # Circuit 1 desired leaving water temperature
+    "InfoParam95": "95",  # Unknown parameter 95
+    "ElectricalPower": "211",  # Heat pump electrical power consumption (kW)
+    "ThermalPower": "212",  # Heat pump thermal power output (kW)
+    "COP": "221",  # Current coefficient of performance
+    "SCOP": "222",  # Seasonal coefficient of performance
+    "FlowRate": "231",  # Flow rate
 }
-
-# Reverse mapping: friendly sensor name -> informationParams parameter ID
-# This allows entity_description.key to use the parameter ID for lookups
-INFORMATION_PARAMS_SENSOR_MAP = {v: k for k, v in INFORMATION_PARAMS_MAP.items()}
 
 # editParams data section sensor mappings
 # Maps friendly sensor names to their parameter IDs in editParams["data"]
-EDIT_PARAMS_DATA_MAP = {
-    "1211": "AXENREGISTER64",  # Heat pump register 64
-    "1212": "AXENREGISTER65",  # Heat pump register 65
+EDIT_PARAMS_DATA_SENSOR_MAP = {
+    "AXENREGISTER64": "1211",  # Heat pump register 64
+    "AXENREGISTER65": "1212",  # Heat pump register 65
 }
-
-# Reverse mapping: friendly sensor name -> editParams data parameter ID
-EDIT_PARAMS_DATA_SENSOR_MAP = {v: k for k, v in EDIT_PARAMS_DATA_MAP.items()}
 
 # ecoSTER thermostat sensors (if moduleEcoSTERSoftVer is not None)
 ECOSTER_SENSORS = {
@@ -397,39 +390,39 @@ ECOSOL_CONTROLLER_IDS = {
 # =============================================================================
 # Default number entities for most controllers
 DEFAULT_NUMBER_MAP = {
-    "1280": "tempCOSet",  # Boiler temperature setpoint
-    "1281": "tempCWUSet",  # Hot water temperature setpoint
-    "1287": "mixerSetTemp1",  # Mixer 1 temperature setpoint
-    "1288": "mixerSetTemp2",  # Mixer 2 temperature setpoint
-    "1289": "mixerSetTemp3",  # Mixer 3 temperature setpoint
-    "1290": "mixerSetTemp4",  # Mixer 4 temperature setpoint
-    "1291": "mixerSetTemp5",  # Mixer 5 temperature setpoint
-    "1292": "mixerSetTemp6",  # Mixer 6 temperature setpoint
-    "55": "heaterMode",  # Heater mode (Summer/Winter/Auto)
+    "tempCOSet": "1280",  # Boiler temperature setpoint
+    "tempCWUSet": "1281",  # Hot water temperature setpoint
+    "mixerSetTemp1": "1287",  # Mixer 1 temperature setpoint
+    "mixerSetTemp2": "1288",  # Mixer 2 temperature setpoint
+    "mixerSetTemp3": "1289",  # Mixer 3 temperature setpoint
+    "mixerSetTemp4": "1290",  # Mixer 4 temperature setpoint
+    "mixerSetTemp5": "1291",  # Mixer 5 temperature setpoint
+    "mixerSetTemp6": "1292",  # Mixer 6 temperature setpoint
+    "heaterMode": "55",  # Heater mode (Summer/Winter/Auto)
 }
 
 # ecoMAX360i specific number entities
 ECOMAX360I_NUMBER_MAP = {
     # Hot Water / DHW parameters
-    "103": "HDWTSetPoint",  # Hot water temperature setpoint (35-60°C)
-    "104": "HDWTSetPointDownHist",  # Hot water hysteresis (5-18°C)
-    "136": "HDWLegionSetPoint",  # Legionella protection temperature (60-80°C)
-    "137": "HDWLegionDay",  # Legionella protection day of week (0-6)
-    "138": "HDWLegionHour",  # Legionella protection hour (0-23)
-    "113": "HDWLoadTime",  # DHW loading time in minutes (0-50)
-    "115": "HDWStartOneLoading",  # DHW start one loading
+    "HDWTSetPoint": "103",  # Hot water temperature setpoint (35-60°C)
+    "HDWTSetPointDownHist": "104",  # Hot water hysteresis (5-18°C)
+    "HDWLegionSetPoint": "136",  # Legionella protection temperature (60-80°C)
+    "HDWLegionDay": "137",  # Legionella protection day of week (0-6)
+    "HDWLegionHour": "138",  # Legionella protection hour (0-23)
+    "HDWLoadTime": "113",  # DHW loading time in minutes (0-50)
+    "HDWStartOneLoading": "115",  # DHW start one loading
     # System auto mode temperature thresholds
-    "702": "SummerOn",  # Outdoor temp threshold to activate summer mode (26-30°C)
-    "703": "SummerOff",  # Outdoor temp threshold to deactivate summer mode (0-26°C)
+    "SummerOn": "702",  # Outdoor temp threshold to activate summer mode (26-30°C)
+    "SummerOff": "703",  # Outdoor temp threshold to deactivate summer mode (0-26°C)
     # Circuit 1 temperature setpoints
-    "238": "Circuit1ComfortTemp",  # Circuit 1 Day Temperature (10-35°C)
-    "239": "Circuit1EcoTemp",  # Circuit 1 Night Temperature (10-35°C)
-    "240": "Circuit1DownHist",  # Circuit 1 Hysteresis (0-5°C)
-    "261": "Circuit1BaseTemp",  # Circuit 1 Base/Max Temperature (24-75°C)
-    "273": "Circuit1CurveRadiator",  # Circuit 1 Heating Curve Slope (0-4)
-    "275": "Circuit1Curveshift",  # Circuit 1 Curve Parallel Shift (-20 to 20)
-    "586": "MixCirc1HeatCurveFanCoil",  # Circuit 1 Fan Coil Heat Curve (0-4)
-    "739": "Circuit1MixerCoolBaseTemp",  # Circuit 1 Cooling Base Temperature (7-30°C)
+    "Circuit1ComfortTemp": "238",  # Circuit 1 Day Temperature (10-35°C)
+    "Circuit1EcoTemp": "239",  # Circuit 1 Night Temperature (10-35°C)
+    "Circuit1DownHist": "240",  # Circuit 1 Hysteresis (0-5°C)
+    "Circuit1BaseTemp": "261",  # Circuit 1 Base/Max Temperature (24-75°C)
+    "Circuit1CurveRadiator": "273",  # Circuit 1 Heating Curve Slope (0-4)
+    "Circuit1Curveshift": "275",  # Circuit 1 Curve Parallel Shift (-20 to 20)
+    "MixCirc1HeatCurveFanCoil": "586",  # Circuit 1 Fan Coil Heat Curve (0-4)
+    "Circuit1MixerCoolBaseTemp": "739",  # Circuit 1 Cooling Base Temperature (7-30°C)
     # Disabled circuits (uncomment as needed)
     # "288": "Circuit2ComfortTemp",  # Circuit 2 Day Temperature
     # "289": "Circuit2EcoTemp",  # Circuit 2 Night Temperature
@@ -500,13 +493,13 @@ AXEN_WORK_STATE_VALUES = {
 # Select entity mapping by controller type
 SELECT_MAP_KEY = {
     "ecoMAX360i": {
-        "236": ("circuit1_work_state", CIRCUIT1_WORK_STATE_VALUES),
-        "162": ("system_work_mode", SYSTEM_WORK_MODE_VALUES),
-        "119": ("dhw_work_mode", DHW_WORK_MODE_VALUES),
-        "1133": ("axen_work_state", AXEN_WORK_STATE_VALUES),
+        "Circuit1WorkState": ("236", CIRCUIT1_WORK_STATE_VALUES),
+        "SystemWorkMode": ("162", SYSTEM_WORK_MODE_VALUES),
+        "DhwWorkMode": ("119", DHW_WORK_MODE_VALUES),
+        "AxenWorkState": ("1133", AXEN_WORK_STATE_VALUES),
     },
     "_default": {
-        "55": ("heater_mode", HEATER_MODE_VALUES),
+        "HeaterMode": ("55", HEATER_MODE_VALUES),
     },
 }
 
@@ -615,6 +608,8 @@ ENTITY_UNIT_MAP = {
     "heatingUpperTemp": UnitOfTemperature.CELSIUS,
     "Circuit1thermostat": UnitOfTemperature.CELSIUS,
     "flapValveStates": None,  # 3-way valve state (numeric: 0=CH, 3=DHW)
+    "HeatDemanded": None,  # Status enum (0=heating, 1=off)
+    "WaterPumpRunning": None,  # Enum: 0=on, 1=unknown, 2=off
     # Heat pump (Axen) units
     "AxenOutdoorTemp": UnitOfTemperature.CELSIUS,
     "AxenOutgoingTemp": UnitOfTemperature.CELSIUS,
@@ -657,14 +652,12 @@ ENTITY_UNIT_MAP = {
     "controllerID": None,
     "ecosrvSoftVer": None,
     # informationParams sensors (from editParams/informationParams)
-    "WaterPumpRunning": None,
     "TargetFlowTemp": UnitOfTemperature.CELSIUS,
     "ActualFlowTemp": UnitOfTemperature.CELSIUS,
     "ActualReturnTemp": UnitOfTemperature.CELSIUS,
     "CompressorFreqInfo": "Hz",
     "FanSpeed": "rpm",
     "HeatPumpAmbient": UnitOfTemperature.CELSIUS,
-    "HeatDemanded": None,  # Status enum (0=heating, 1=off)
     "ActualDHWTemp": UnitOfTemperature.CELSIUS,
     "Circuit1DesiredLWT": UnitOfTemperature.CELSIUS,
     "InfoParam95": None,  # Unknown parameter
@@ -689,6 +682,8 @@ STATE_CLASS_MAP: dict[str, SensorStateClass | None] = {
     "statusCO": None,
     "statusCWU": None,
     "flapValveStates": None,  # 3-way valve state (not a measurement)
+    "WaterPumpRunning": None,  # Enum (0=on, 1=unknown, 2=off)
+    "HeatDemanded": None,  # Enum (0=heating, 1=off)
     "AxenWorkState": None,  # Heat pump work state (not a measurement)
     "softVer": None,
     "controllerID": None,
@@ -705,8 +700,6 @@ STATE_CLASS_MAP: dict[str, SensorStateClass | None] = {
     "PS": None,
     "heating_work_state_pump4": None,
     # informationParams sensors - valve states and statuses are not measurements
-    "WaterPumpRunning": None,  # Enum (0=on, 1=unknown, 2=off)
-    "HeatDemanded": None,  # Enum (0=heating, 1=off)
     "InfoParam95": None,  # Unknown
     "SCOP": SensorStateClass.TOTAL,  # Seasonal coefficient (cumulative)
 }
@@ -787,6 +780,8 @@ ENTITY_SENSOR_DEVICE_CLASS_MAP: dict[str, SensorDeviceClass | None] = {
     "heatingUpperTemp": SensorDeviceClass.TEMPERATURE,
     "Circuit1thermostat": SensorDeviceClass.TEMPERATURE,
     "flapValveStates": SensorDeviceClass.ENUM,  # 3-way valve state
+    "HeatDemanded": SensorDeviceClass.ENUM,
+    "WaterPumpRunning": SensorDeviceClass.ENUM,
     # Heat pump (Axen) device classes
     "AxenOutdoorTemp": SensorDeviceClass.TEMPERATURE,
     "AxenOutgoingTemp": SensorDeviceClass.TEMPERATURE,
@@ -917,6 +912,8 @@ ENTITY_PRECISION = {
     "PS": None,
     "TempBuforDown": 1,
     "flapValveStates": 0,  # 3-way valve state (integer value)
+    "WaterPumpRunning": None,  # Enum (0=on, 1=unknown, 2=off)
+    "HeatDemanded": None,  # Enum (0=heating, 1=off)
     # Heat pump (Axen) precision
     "AxenOutdoorTemp": 1,
     "AxenOutgoingTemp": 1,
@@ -977,14 +974,12 @@ ENTITY_PRECISION = {
     "protocolType": None,
     "ecosrvSoftVer": None,
     # informationParams sensors precision
-    "WaterPumpRunning": None,  # Enum (0=on, 1=unknown, 2=off)
     "TargetFlowTemp": 1,  # Temperature
     "ActualFlowTemp": 1,  # Temperature
     "ActualReturnTemp": 1,  # Temperature
     "CompressorFreqInfo": 0,  # Frequency (integer Hz)
     "FanSpeed": 0,  # RPM (integer)
     "HeatPumpAmbient": 1,  # Temperature
-    "HeatDemanded": None,  # Enum (0=heating, 1=off)
     "ActualDHWTemp": 1,  # Temperature
     "Circuit1DesiredLWT": 1,  # Temperature
     "ElectricalPower": 2,  # Power in kW (2 decimals)
@@ -1000,14 +995,16 @@ ENTITY_PRECISION = {
 NO_CWU_TEMP_SET_STATUS_CODE = 128
 
 ENTITY_VALUE_PROCESSOR = {
-    "mode": lambda x: SENSOR_MODE_MAPPING.get(x, STATE_UNKNOWN),
-    "lambdaStatus": lambda x: SENSOR_LAMBDA_STATUS_MAPPING.get(x, STATE_UNKNOWN),
-    "statusCWU": lambda x: SENSOR_STATUS_CWU_MAPPING.get(x, STATE_UNKNOWN),
-    "statusCO": lambda x: SENSOR_STATUS_CO_MAPPING.get(x, STATE_UNKNOWN),
-    "thermostat": lambda x: SENSOR_THERMOSTAT_MAPPING.get(x, STATE_UNKNOWN),
-    "flapValveStates": lambda x: SENSOR_FLAP_VALVE_STATES_MAPPING.get(x, STATE_UNKNOWN),
-    "HeatDemanded": lambda x: SENSOR_HEAT_DEMANDED_MAPPING.get(x, STATE_UNKNOWN),
-    "WaterPumpRunning": lambda x: SENSOR_WATER_PUMP_RUNNING_MAPPING.get(x, STATE_UNKNOWN),
+    "mode": lambda x: SENSOR_MODE_MAPPING.get(int(x), STATE_UNKNOWN),
+    "lambdaStatus": lambda x: SENSOR_LAMBDA_STATUS_MAPPING.get(int(x), STATE_UNKNOWN),
+    "statusCWU": lambda x: SENSOR_STATUS_CWU_MAPPING.get(int(x), STATE_UNKNOWN),
+    "statusCO": lambda x: SENSOR_STATUS_CO_MAPPING.get(int(x), STATE_UNKNOWN),
+    "thermostat": lambda x: SENSOR_THERMOSTAT_MAPPING.get(int(x), STATE_UNKNOWN),
+    "flapValveStates": lambda x: SENSOR_FLAP_VALVE_STATES_MAPPING.get(int(x), STATE_UNKNOWN),
+    "HeatDemanded": lambda x: SENSOR_HEAT_DEMANDED_MAPPING.get(int(x), STATE_UNKNOWN),
+    "WaterPumpRunning": lambda x: SENSOR_WATER_PUMP_RUNNING_MAPPING.get(
+        int(x), STATE_UNKNOWN
+    ),
 }
 
 # =============================================================================

@@ -80,13 +80,13 @@ class EconetNumber(EconetEntity, NumberEntity):
         sys_params = self.coordinator.data.get("sysParams", {})
         controller_id = sys_params.get("controllerID", "_default")
         number_map = NUMBER_MAP_KEY.get(controller_id, NUMBER_MAP_KEY["_default"])
-        map_key = number_map.get(self.entity_description.key)
+        data_key = number_map.get(self.entity_description.key)
 
-        if map_key:
+        if data_key:
             self._set_value_limits(value)
         else:
             _LOGGER.error(
-                "ecoNETNumber _sync_state: map_key %s not found in NUMBER_MAP for controller %s",
+                "ecoNETNumber _sync_state: data_key %s not found in NUMBER_MAP for controller %s",
                 self.entity_description.key,
                 controller_id,
             )
@@ -191,7 +191,7 @@ class EconetNumber(EconetEntity, NumberEntity):
 
 
 def can_add(
-    key: str,
+    data_key: str,
     coordinator: EconetDataCoordinator,
     has_params_edits: bool,
     has_edit_params: bool,
@@ -201,14 +201,14 @@ def can_add(
         if has_edit_params:
             # For ecoMAX360i: check editParams data
             return (
-                coordinator.has_edit_params_data(key)
-                and coordinator.data["editParams"][key]
+                coordinator.has_edit_params_data(data_key)
+                and coordinator.data["editParams"][data_key]
             )
         if has_params_edits:
             # For most controllers: check paramsEdits data
             return (
-                coordinator.has_param_edit_data(key)
-                and coordinator.data["paramsEdits"][key]
+                coordinator.has_param_edit_data(data_key)
+                and coordinator.data["paramsEdits"][data_key]
             )
         return False
     except KeyError as e:
@@ -237,19 +237,17 @@ def create_number_entity_description(
 ) -> EconetNumberEntityDescription:
     """Create ecoNET300 number entity description."""
     # Get device-specific number mapping
-    number_map = NUMBER_MAP_KEY.get(controller_id, NUMBER_MAP_KEY["_default"])
-    map_key = number_map.get(str(key), str(key))
     _LOGGER.debug(
-        "Creating number entity for key: %s (controller: %s)", map_key, controller_id
+        "Creating number entity for key: %s (controller: %s)", key, controller_id
     )
     return EconetNumberEntityDescription(
         key=key,
-        translation_key=camel_to_snake(map_key),
-        device_class=ENTITY_NUMBER_SENSOR_DEVICE_CLASS_MAP.get(map_key),
-        native_unit_of_measurement=ENTITY_UNIT_MAP.get(map_key),
-        native_min_value=ENTITY_MIN_VALUE.get(map_key) or 0,
-        native_max_value=ENTITY_MAX_VALUE.get(map_key) or 100,
-        native_step=ENTITY_STEP.get(map_key, 1),
+        translation_key=camel_to_snake(key),
+        device_class=ENTITY_NUMBER_SENSOR_DEVICE_CLASS_MAP.get(key),
+        native_unit_of_measurement=ENTITY_UNIT_MAP.get(key),
+        native_min_value=ENTITY_MIN_VALUE.get(key) or 0,
+        native_max_value=ENTITY_MAX_VALUE.get(key) or 100,
+        native_step=ENTITY_STEP.get(key, 1),
     )
 
 
@@ -268,10 +266,6 @@ async def async_setup_entry(
     # Get controller ID to determine which number mappings to use
     sys_params = coordinator.data.get("sysParams", {})
     controller_id = sys_params.get("controllerID", "_default")
-
-    # Get device-specific number mapping
-    number_map = NUMBER_MAP_KEY.get(controller_id, NUMBER_MAP_KEY["_default"])
-    _LOGGER.info("Using number mapping for controller: %s", controller_id)
 
     # Check if this controller supports parameter editing at all
     # paramsEdits (rmCurrentDataParamsEdits endpoint) OR editParams (editParams endpoint)
@@ -292,27 +286,25 @@ async def async_setup_entry(
         has_edit_params,
     )
 
+    number_map = NUMBER_MAP_KEY.get(controller_id, NUMBER_MAP_KEY["_default"])
+
     for key in number_map:
+        data_key = number_map.get(key)
         # Get limits using the appropriate method based on controller type
         number_limits = None
 
         if has_edit_params:
             # For editParams, get limits directly from coordinator data (already fetched)
             edit_params = coordinator.data.get("editParams", {})
-            if key in edit_params:
-                param_data = edit_params[key]
-                if (
-                    isinstance(param_data, dict)
-                    and "minv" in param_data
-                    and "maxv" in param_data
-                ):
-                    number_limits = Limits(param_data["minv"], param_data["maxv"])
-                    _LOGGER.debug(
-                        "Extracted limits for %s from editParams: min=%s, max=%s",
-                        key,
-                        number_limits.min,
-                        number_limits.max,
-                    )
+            if data_key and data_key in edit_params:
+                param_data = edit_params[data_key]
+                number_limits = Limits(param_data["minv"], param_data["maxv"])
+                _LOGGER.debug(
+                    "Extracted limits for %s from editParams: min=%s, max=%s",
+                    param_data["name"],
+                    number_limits.min,
+                    number_limits.max,
+                )
         elif has_params_edits:
             # For paramsEdits, use the API method (needs separate fetch)
             number_limits = await api.get_param_limits(key)
@@ -323,8 +315,9 @@ async def async_setup_entry(
                 key,
             )
             continue
-
-        if can_add(key, coordinator, has_params_edits, has_edit_params):
+        if data_key and can_add(
+            data_key, coordinator, has_params_edits, has_edit_params
+        ):
             entity_description = create_number_entity_description(key, controller_id)
             entity_description = apply_limits(entity_description, number_limits)
             entities.append(

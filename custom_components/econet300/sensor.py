@@ -136,8 +136,16 @@ class EcoSterSensor(EcoSterEntity, SensorEntity):
 
 
 def create_sensor_entity_description(key: str) -> EconetSensorEntityDescription:
-    """Create ecoNET300 sensor entity based on supplied key."""
-    _LOGGER.debug("Creating sensor entity description for key: %s", key)
+    """Create ecoNET300 sensor entity based on supplied key.
+
+    Args:
+        key: Parameter ID used for data lookup (e.g., "26", "103", "231")
+        translation_key_name: Friendly name for translations/lookups (e.g., "HeatDemanded")
+                              If None, uses key for backward compatibility
+
+    """
+
+    _LOGGER.debug("Creating sensor entity description - key: %s", key)
     entity_description = EconetSensorEntityDescription(
         key=key,
         device_class=ENTITY_SENSOR_DEVICE_CLASS_MAP.get(key, None),
@@ -185,7 +193,8 @@ def create_controller_sensors(
     # Iterate through the selected keys and create sensors if valid data is found
     for data_key in sensor_keys:
         _LOGGER.debug(
-            "Processing entity sensor data_key: %s from regParams, sysParams, editParams & informationParams", data_key
+            "Processing entity sensor data_key: %s from regParams, sysParams, editParams & informationParams",
+            data_key,
         )
         if data_key in data_regParams:
             # Check if the value is not null before creating the sensor
@@ -223,14 +232,19 @@ def create_controller_sensors(
                 if edit_param_value is None:
                     _LOGGER.info(
                         "%s (param_id: %s) in editParams is null, sensor will not be created.",
-                        data_key, param_id
+                        data_key,
+                        param_id,
                     )
                     continue
                 # For editParams, the value might be a dict with 'value' key or a simple value
-                if isinstance(edit_param_value, dict) and edit_param_value.get("value") is None:
+                if (
+                    isinstance(edit_param_value, dict)
+                    and edit_param_value.get("value") is None
+                ):
                     _LOGGER.info(
                         "%s (param_id: %s) in editParams has null value, sensor will not be created.",
-                        data_key, param_id
+                        data_key,
+                        param_id,
                     )
                     continue
                 entity = EconetSensor(
@@ -238,7 +252,9 @@ def create_controller_sensors(
                 )
                 entities.append(entity)
                 _LOGGER.debug(
-                    "Created and appended sensor entity from editParams: %s (param_id: %s)", entity, param_id
+                    "Created and appended sensor entity from editParams: %s (param_id: %s)",
+                    entity,
+                    param_id,
                 )
             else:
                 _LOGGER.debug(
@@ -253,13 +269,20 @@ def create_controller_sensors(
                 # informationParams has structure: [editable_flag, [[value, unit, type]]]
                 info_data = data_informationParams[param_id]
                 # Check if it has valid data structure
-                if isinstance(info_data, list) and len(info_data) > 1 and isinstance(info_data[1], list) and len(info_data[1]) > 0:
+                if (
+                    isinstance(info_data, list)
+                    and len(info_data) > 1
+                    and isinstance(info_data[1], list)
+                    and len(info_data[1]) > 0
+                ):
                     entity = EconetSensor(
                         create_sensor_entity_description(data_key), coordinator, api
                     )
                     entities.append(entity)
                     _LOGGER.debug(
-                        "Created and appended sensor entity from informationParams: %s (param_id: %s)", entity, param_id
+                        "Created and appended sensor entity from informationParams: %s (param_id: %s)",
+                        entity,
+                        param_id,
                     )
                 else:
                     _LOGGER.info(
